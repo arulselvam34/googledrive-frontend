@@ -196,6 +196,15 @@ export const Dashboard = () => {
     setFolderPath([]);
   };
 
+  const handleViewFile = async (fileId) => {
+    try {
+      const response = await fileService.downloadFile(fileId, false); // false = view mode
+      window.open(response.data.downloadUrl, '_blank');
+    } catch (error) {
+      toast.error('❌ Failed to open file');
+    }
+  };
+
   const handleDownload = async (fileId, fileName, fileType) => {
     try {
       if (fileType === 'folder') {
@@ -212,8 +221,14 @@ export const Dashboard = () => {
         window.URL.revokeObjectURL(url);
         toast.success(`✅ ${fileName}.zip downloaded successfully`);
       } else {
-        const response = await fileService.downloadFile(fileId);
-        window.open(response.data.downloadUrl, '_blank');
+        const response = await fileService.downloadFile(fileId, true); // true = download mode
+        const link = document.createElement('a');
+        link.href = response.data.downloadUrl;
+        link.download = fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         toast.success(`✅ ${fileName} downloading...`);
       }
     } catch (error) {
@@ -694,7 +709,14 @@ export const Dashboard = () => {
                   className={`group relative overflow-hidden cursor-pointer transition-all duration-200 ${
                     currentView === 'trash' ? 'opacity-60' : ''
                   }`}
-                  onClick={() => file.fileType === 'folder' && currentView !== 'trash' && handleFolderClick(file.id, file.fileName)}
+                  onClick={() => {
+                    if (currentView === 'trash') return;
+                    if (file.fileType === 'folder') {
+                      handleFolderClick(file.id, file.fileName);
+                    } else {
+                      handleViewFile(file.id);
+                    }
+                  }}
                 >
                   <div className={`relative backdrop-blur-xl rounded-xl md:rounded-2xl p-3 sm:p-4 border hover:shadow-lg transition-all duration-200 h-full flex flex-col ${
                     file.isStarred ? 'ring-2 ring-yellow-400/50' : ''
@@ -813,7 +835,14 @@ export const Dashboard = () => {
                     } ${
                       theme === 'light' ? 'border-gray-200 hover:bg-blue-50' : 'border-white/10 hover:bg-white/10'
                     }`}
-                    onClick={() => file.fileType === 'folder' && currentView !== 'trash' && handleFolderClick(file.id, file.fileName)}
+                    onClick={() => {
+                      if (currentView === 'trash') return;
+                      if (file.fileType === 'folder') {
+                        handleFolderClick(file.id, file.fileName);
+                      } else {
+                        handleViewFile(file.id);
+                      }
+                    }}
                   >
                     {/* Icon */}
                     <div className="relative flex-shrink-0">

@@ -27,7 +27,10 @@ export const fileService = {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
   
-  downloadFile: (fileId) => apiClient.get(`/files/${fileId}/download`),
+  downloadFile: (fileId, forceDownload = false) => {
+    const params = forceDownload ? { download: 'true' } : {};
+    return apiClient.get(`/files/${fileId}/download`, { params });
+  },
   
   downloadFolder: (folderId) => 
     apiClient.get(`/files/${folderId}/download-folder`, {
@@ -42,6 +45,8 @@ export const fileService = {
   restoreFile: (fileId) => apiClient.patch(`/files/${fileId}/restore`),
   
   toggleStar: (fileId) => apiClient.patch(`/files/${fileId}/star`),
+  
+  renameFile: (fileId, newName) => apiClient.patch(`/files/${fileId}/rename`, { newName }),
   
   emptyTrash: () => apiClient.delete('/files/trash/empty')
 };
